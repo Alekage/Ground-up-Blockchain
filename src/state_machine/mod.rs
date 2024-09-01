@@ -1,4 +1,4 @@
-
+mod swithces;
 
 pub trait StateMachine {
     type State;
