@@ -1,4 +1,5 @@
 mod swithces;
+mod laundry;
 
 pub trait StateMachine {
     type State;
