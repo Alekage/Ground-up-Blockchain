@@ -74,18 +74,36 @@ impl StateMachine for Atm {
                     }
                     Auth::Authenticating(pin_hash) => {
                         let mut original = starting_state.keystroke_register.clone();
-                        original.push(i.clone());
-
-                        return Self {
-                            cash_inside: starting_state.cash_inside,
-                            expected_pin_hash: Auth::Authenticating(pin_hash),
-                            keystroke_register: original
+                        
+                        if *i != Key::Enter {
+                            original.push(i.clone());
                         }
+
+                        if *i == Key::Enter && pin_hash != crate::hash(&original) {
+                            return Self {
+                                cash_inside: starting_state.cash_inside,
+                                expected_pin_hash: Auth::Waiting,
+                                keystroke_register: Vec::new()
+                            }
+                        } else if pin_hash == 1234 {
+                            return Self {
+                                cash_inside: starting_state.cash_inside,
+                                expected_pin_hash: Auth::Authenticating(1234),
+                                keystroke_register: original
+                            }
+                        } else {
+                            return Self {
+                                cash_inside: starting_state.cash_inside,
+                                expected_pin_hash: Auth::Authenticated,
+                                keystroke_register: Vec::new()
+                            }
+                        }
+                        
                     }
                     Auth::Authenticated => {
                         let mut original = starting_state.keystroke_register.clone();
                         original.push(i.clone());
-                        
+
                         return Self {
                             cash_inside: starting_state.cash_inside,
                             expected_pin_hash: Auth::Authenticated,
