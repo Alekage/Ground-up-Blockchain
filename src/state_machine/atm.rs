@@ -26,7 +26,7 @@ enum Auth {
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Atm {
     cash_inside: u64,
-    expected_pin_cash: Auth,
+    expected_pin_hash: Auth,
     keystroke_register: Vec<Key>
 }
 
@@ -34,16 +34,35 @@ impl StateMachine for Atm {
     type State = Self;
     type Transition = Action;
 
-    fn next_state(starting_state: &Self::State, transition: &Self::Transition) -> Self::State {
-        match transition {
+    fn next_state(starting_state: &Self::State, t: &Self::Transition) -> Self::State {
+        match t {
             Action::SwipeCard(i) => {
-                match starting_state.expected_pin_cash {
-                    Auth::Waiting => return starting_state.clone(),
-                    Auth::Authenticating(i) => return starting_state.clone(),
-                    Auth::Authenticated => return starting_state.clone()
+                match starting_state.expected_pin_hash {
+                    Auth::Waiting => {
+                        return Self {
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash: Auth::Authenticating(*i),
+                            keystroke_register: starting_state.keystroke_register.clone()
+
+                        }
+                    }
+                    Auth::Authenticating(pin_hash) => {
+                        return Self {
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash: Auth::Authenticating(pin_hash),
+                            keystroke_register: starting_state.keystroke_register.clone()
+                        }
+                    }
+                    Auth::Authenticated => {
+                        return Self {
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash: Auth::Authenticated,
+                            keystroke_register: starting_state.keystroke_register.clone()
+                        }
+                    }
                 }
             }
-            Action::PressKey(i) => return starting_state.clone()
+            Action::PressKey(i) => starting_state.clone()
         }
     }
 }
