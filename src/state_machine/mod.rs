@@ -1,6 +1,6 @@
 mod swithces;
 mod laundry;
-
+mod atm;
 pub trait StateMachine {
     type State;
     type Transition;
