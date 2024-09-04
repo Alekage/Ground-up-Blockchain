@@ -62,7 +62,38 @@ impl StateMachine for Atm {
                     }
                 }
             }
-            Action::PressKey(i) => starting_state.clone()
+            Action::PressKey(i) => {
+                match starting_state.expected_pin_hash {
+                    Auth::Waiting => {
+                        return Self {
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash: Auth::Waiting,
+                            keystroke_register: starting_state.keystroke_register.clone()
+
+                        }
+                    }
+                    Auth::Authenticating(pin_hash) => {
+                        let mut original = starting_state.keystroke_register.clone();
+                        original.push(i.clone());
+
+                        return Self {
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash: Auth::Authenticating(pin_hash),
+                            keystroke_register: original
+                        }
+                    }
+                    Auth::Authenticated => {
+                        let mut original = starting_state.keystroke_register.clone();
+                        original.push(i.clone());
+                        
+                        return Self {
+                            cash_inside: starting_state.cash_inside,
+                            expected_pin_hash: Auth::Authenticated,
+                            keystroke_register: original
+                        }
+                    }
+                }
+            }
         }
     }
 }
