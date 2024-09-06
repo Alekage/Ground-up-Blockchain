@@ -153,3 +153,57 @@ impl StateMachine for Atm {
         }
     }
 }
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+
+    #[test]
+    fn sm_3_simple_swipe_card() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Waiting,
+            keystroke_register: Vec::new(),
+        };
+        let end = Atm::next_state(&start, &Action::SwipeCard(1234));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_3_swipe_card_again_part_way_through() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: Vec::new(),
+        };
+        let end = Atm::next_state(&start, &Action::SwipeCard(1234));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: vec![Key::One, Key::Three],
+        };
+        let end = Atm::next_state(&start, &Action::SwipeCard(1234));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: vec![Key::One, Key::Three],
+        };
+
+        assert_eq!(end, expected);
+    }
+}
