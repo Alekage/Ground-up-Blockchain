@@ -30,7 +30,27 @@ pub struct Atm {
     keystroke_register: Vec<Key>
 }
 
+pub fn key_to_digit(keys: &Vec<Key>) -> u64 {
+    let mut number: u64 = 0;
+
+    for key in keys {
+        number = match key {
+            Key::Enter => number, 
+            _ => number * 10 + match key {
+                Key::One => 1,
+                Key::Two => 2,
+                Key::Three => 3,
+                Key::Four => 4,
+                _ => 0,
+            },
+        };
+    }
+
+    number
+}
+
 impl StateMachine for Atm {
+    // Notice that we are using the same type for the state as we are using for the machine this time.
     type State = Self;
     type Transition = Action;
 
@@ -102,13 +122,31 @@ impl StateMachine for Atm {
                     }
                     Auth::Authenticated => {
                         let mut original = starting_state.keystroke_register.clone();
-                        original.push(i.clone());
-
-                        return Self {
-                            cash_inside: starting_state.cash_inside,
-                            expected_pin_hash: Auth::Authenticated,
-                            keystroke_register: original
+                        
+                        if *i != Key::Enter {
+                            original.push(i.clone());
+                            return Self {
+                                cash_inside: starting_state.cash_inside,
+                                expected_pin_hash: Auth::Authenticated,
+                                keystroke_register: original
+                            }
                         }
+
+
+                        if key_to_digit(&original) > starting_state.cash_inside {
+                            return Self {
+                                cash_inside: starting_state.cash_inside,
+                                expected_pin_hash: Auth::Waiting,
+                                keystroke_register: Vec::new()
+                            }
+                        } else {
+                            return Self {
+                                cash_inside: starting_state.cash_inside - key_to_digit(&original),
+                                expected_pin_hash: Auth::Waiting,
+                                keystroke_register: Vec::new()
+                            }
+                        }
+
                     }
                 }
             }
