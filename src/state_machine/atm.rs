@@ -206,4 +206,94 @@ pub mod tests {
 
         assert_eq!(end, expected);
     }
+
+    #[test]
+    fn sm_3_press_key_before_card_swipe() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Waiting,
+            keystroke_register: Vec::new(),
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::One));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Waiting,
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_3_enter_single_digit_of_pin() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: Vec::new(),
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::One));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: vec![Key::One],
+        };
+
+        assert_eq!(end, expected);
+
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: vec![Key::One],
+        };
+        let end1 = Atm::next_state(&start, &Action::PressKey(Key::Two));
+        let expected1 = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(1234),
+            keystroke_register: vec![Key::One, Key::Two],
+        };
+
+        assert_eq!(end1, expected1);
+    }
+
+    #[test]
+    fn sm_3_enter_wrong_pin() {
+        // Create hash of pin
+        let pin = vec![Key::One, Key::Two, Key::Three, Key::Four];
+        let pin_hash = crate::hash(&pin);
+
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(pin_hash),
+            keystroke_register: vec![Key::Three, Key::Three, Key::Three, Key::Three],
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::Enter));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Waiting,
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_3_enter_correct_pin() {
+        // Create hash of pin
+        let pin = vec![Key::One, Key::Two, Key::Three, Key::Four];
+        let pin_hash = crate::hash(&pin);
+
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticating(pin_hash),
+            keystroke_register: vec![Key::One, Key::Two, Key::Three, Key::Four],
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::Enter));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+    }
 }
