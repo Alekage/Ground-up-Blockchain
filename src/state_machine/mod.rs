@@ -1,6 +1,7 @@
 mod swithces;
 mod laundry;
 mod atm;
+mod accounted_currency;
 pub trait StateMachine {
     type State;
     type Transition;
@@ -12,4 +13,10 @@ pub trait StateMachine {
         "Unnamed state machine".into()
     }
 
+}
+#[allow(dead_code)]
+pub enum User {
+    Alice,
+    Bob,
+    Charlie
 }
