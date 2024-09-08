@@ -296,4 +296,70 @@ pub mod tests {
 
         assert_eq!(end, expected);
     }
+
+    #[test]
+    fn sm_3_enter_single_digit_of_withdraw_amount() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: Vec::new(),
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::One));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: vec![Key::One],
+        };
+
+        assert_eq!(end, expected);
+
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: vec![Key::One],
+        };
+        let end1 = Atm::next_state(&start, &Action::PressKey(Key::Four));
+        let expected1 = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: vec![Key::One, Key::Four],
+        };
+
+        assert_eq!(end1, expected1);
+    }
+
+    #[test]
+    fn sm_3_try_to_withdraw_too_much() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: vec![Key::One, Key::Four],
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::Enter));
+        let expected = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Waiting,
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_3_withdraw_acceptable_amount() {
+        let start = Atm {
+            cash_inside: 10,
+            expected_pin_hash: Auth::Authenticated,
+            keystroke_register: vec![Key::One],
+        };
+        let end = Atm::next_state(&start, &Action::PressKey(Key::Enter));
+        let expected = Atm {
+            cash_inside: 9,
+            expected_pin_hash: Auth::Waiting,
+            keystroke_register: Vec::new(),
+        };
+
+        assert_eq!(end, expected);
+    }
+
 }
