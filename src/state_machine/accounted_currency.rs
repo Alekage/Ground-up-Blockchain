@@ -21,3 +21,67 @@ impl StateMachine for AccountedCurrency {
         todo!()
     }
 }
+
+
+#[cfg(test)]
+pub mod tests {
+    #[test]
+    fn sm_4_mint_creates_account() {
+        let start = HashMap::new();
+        let end = AccountedCurrency::next_state(
+            &start,
+            &AccountingTransaction::Mint {
+                minter: User::Alice,
+                amount: 100,
+            },
+        );
+        let expected = HashMap::from([(User::Alice, 100)]);
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_4_mint_creates_second_account() {
+        let start = HashMap::from([(User::Alice, 100)]);
+        let end = AccountedCurrency::next_state(
+            &start,
+            &AccountingTransaction::Mint {
+                minter: User::Bob,
+                amount: 50,
+            },
+        );
+        let expected = HashMap::from([(User::Alice, 100), (User::Bob, 50)]);
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_4_mint_increases_balance() {
+        let start = HashMap::from([(User::Alice, 100)]);
+        let end = AccountedCurrency::next_state(
+            &start,
+            &AccountingTransaction::Mint {
+                minter: User::Alice,
+                amount: 50,
+            },
+        );
+        let expected = HashMap::from([(User::Alice, 150)]);
+
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_4_empty_mint() {
+        let start = HashMap::new();
+        let end = AccountedCurrency::next_state(
+            &start,
+            &AccountingTransaction::Mint {
+                minter: User::Alice,
+                amount: 0,
+            },
+        );
+        let expected = HashMap::new();
+
+        assert_eq!(end, expected);
+    }
+}
