@@ -50,7 +50,6 @@ pub fn key_to_digit(keys: &Vec<Key>) -> u64 {
 }
 
 impl StateMachine for Atm {
-    // Notice that we are using the same type for the state as we are using for the machine this time.
     type State = Self;
     type Transition = Action;
 
@@ -160,7 +159,7 @@ pub mod tests {
 
 
     #[test]
-    fn sm_3_simple_swipe_card() {
+    fn simple_swipe_card() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Waiting,
@@ -177,7 +176,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_swipe_card_again_part_way_through() {
+    fn swipe_card_again_part_way_through() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Authenticating(1234),
@@ -208,7 +207,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_press_key_before_card_swipe() {
+    fn press_key_before_card_swipe() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Waiting,
@@ -225,7 +224,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_enter_single_digit_of_pin() {
+    fn enter_single_digit_of_pin() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Authenticating(1234),
@@ -256,7 +255,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_enter_wrong_pin() {
+    fn enter_wrong_pin() {
         // Create hash of pin
         let pin = vec![Key::One, Key::Two, Key::Three, Key::Four];
         let pin_hash = crate::hash(&pin);
@@ -277,7 +276,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_enter_correct_pin() {
+    fn enter_correct_pin() {
         // Create hash of pin
         let pin = vec![Key::One, Key::Two, Key::Three, Key::Four];
         let pin_hash = crate::hash(&pin);
@@ -298,7 +297,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_enter_single_digit_of_withdraw_amount() {
+    fn enter_single_digit_of_withdraw_amount() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Authenticated,
@@ -329,7 +328,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_try_to_withdraw_too_much() {
+    fn try_to_withdraw_too_much() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Authenticated,
@@ -346,7 +345,7 @@ pub mod tests {
     }
 
     #[test]
-    fn sm_3_withdraw_acceptable_amount() {
+    fn withdraw_acceptable_amount() {
         let start = Atm {
             cash_inside: 10,
             expected_pin_hash: Auth::Authenticated,
