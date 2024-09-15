@@ -45,10 +45,14 @@ impl StateMachine for AccountedCurrency {
             },
             AccountingTransaction::Transfer { sender, receiver, amount } => {
                 if let Some(sender_balance) = new_state.get_mut(sender) {
-                    if *sender_balance >= *amount {
+                    if *sender_balance > *amount {
                         *sender_balance -= amount;
                         let receiver_balance = new_state.entry(*receiver).or_insert(0);
                         *receiver_balance += amount;
+                    } else if *sender_balance == *amount {
+                        let receiver_balance = new_state.entry(*receiver).or_insert(0);
+                        *receiver_balance += amount;
+                        new_state.remove(sender);
                     }
                 }
             }   
