@@ -14,6 +14,7 @@ pub trait StateMachine {
     }
 
 }
+#[derive(Hash, Eq, PartialEq, Debug, Clone, Copy)]
 #[allow(dead_code)]
 pub enum User {
     Alice,

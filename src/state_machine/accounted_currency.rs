@@ -17,14 +17,53 @@ impl StateMachine for AccountedCurrency {
     type State = Balances;
     type Transition = AccountingTransaction;
 
-    fn next_state(_starting_state: &Self::State, _transition: &Self::Transition) -> Self::State {
-        todo!()
+    fn next_state(starting_state: &Self::State, transition: &Self::Transition) -> Self::State {
+        let mut new_state = starting_state.clone();
+
+        match transition {
+            AccountingTransaction::Mint { minter, amount } => {
+                if *amount > 0 {
+                    let balance = new_state.entry(*minter).or_insert(0);
+                    *balance += amount;
+                } else {
+                    if let Some(balance) = new_state.get(minter) {
+                        if *balance == 0 {
+                            new_state.remove(minter);
+                        }
+                    }
+                }
+            },
+
+            AccountingTransaction::Burn { burner, amount } => {
+                if let Some(balance) = new_state.get_mut(burner) {
+                    if *balance > *amount {
+                        *balance -= amount;
+                    } else {
+                        new_state.remove(burner);
+                    }
+                }
+            },
+            AccountingTransaction::Transfer { sender, receiver, amount } => {
+                if let Some(sender_balance) = new_state.get_mut(sender) {
+                    if *sender_balance >= *amount {
+                        *sender_balance -= amount;
+                        let receiver_balance = new_state.entry(*receiver).or_insert(0);
+                        *receiver_balance += amount;
+                    }
+                }
+            }   
+        }
+
+        return new_state
     }
 }
 
 
 #[cfg(test)]
 pub mod tests {
+
+    use super::*;
+
     #[test]
     fn sm_4_mint_creates_account() {
         let start = HashMap::new();
