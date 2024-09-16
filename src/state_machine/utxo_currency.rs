@@ -78,3 +78,174 @@ impl StateMachine for DigitalCashSystem {
         todo!()
     }
 }
+
+
+#[cfg(test)]
+pub mod tests {
+    use super::*;
+
+    #[test]
+    fn sm_5_mint_new_cash() {
+        let start = State::new();
+        let end = DigitalCashSystem::next_state(
+            &start,
+            &CashTransaction::Mint {
+                minter: User::Alice,
+                amount: 20,
+            },
+        );
+
+        let expected = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_5_overflow_receives_fails() {
+        let start = State::from([Bill {
+            owner: User::Alice,
+            amount: 42,
+            serial: 0,
+        }]);
+        let end = DigitalCashSystem::next_state(
+            &start,
+            &CashTransaction::Transfer {
+                spends: vec![Bill {
+                    owner: User::Alice,
+                    amount: 42,
+                    serial: 0,
+                }],
+                receives: vec![
+                    Bill {
+                        owner: User::Alice,
+                        amount: u64::MAX,
+                        serial: 1,
+                    },
+                    Bill {
+                        owner: User::Alice,
+                        amount: 42,
+                        serial: 2,
+                    },
+                ],
+            },
+        );
+        let expected = State::from([Bill {
+            owner: User::Alice,
+            amount: 42,
+            serial: 0,
+        }]);
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_5_empty_spend_fails() {
+        let start = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        let end = DigitalCashSystem::next_state(
+            &start,
+            &CashTransaction::Transfer {
+                spends: vec![],
+                receives: vec![Bill {
+                    owner: User::Alice,
+                    amount: 15,
+                    serial: 1,
+                }],
+            },
+        );
+        let expected = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_5_empty_receive_fails() {
+        let start = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        let end = DigitalCashSystem::next_state(
+            &start,
+            &CashTransaction::Transfer {
+                spends: vec![Bill {
+                    owner: User::Alice,
+                    amount: 20,
+                    serial: 0,
+                }],
+                receives: vec![],
+            },
+        );
+        let mut expected = State::from([]);
+        expected.set_serial(1);
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_5_output_value_0_fails() {
+        let start = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        let end = DigitalCashSystem::next_state(
+            &start,
+            &CashTransaction::Transfer {
+                spends: vec![Bill {
+                    owner: User::Alice,
+                    amount: 20,
+                    serial: 0,
+                }],
+                receives: vec![Bill {
+                    owner: User::Bob,
+                    amount: 0,
+                    serial: 1,
+                }],
+            },
+        );
+        let expected = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        assert_eq!(end, expected);
+    }
+
+    #[test]
+    fn sm_5_serial_number_already_seen_fails() {
+        let start = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        let end = DigitalCashSystem::next_state(
+            &start,
+            &CashTransaction::Transfer {
+                spends: vec![Bill {
+                    owner: User::Alice,
+                    amount: 20,
+                    serial: 0,
+                }],
+                receives: vec![Bill {
+                    owner: User::Alice,
+                    amount: 18,
+                    serial: 0,
+                }],
+            },
+        );
+        let expected = State::from([Bill {
+            owner: User::Alice,
+            amount: 20,
+            serial: 0,
+        }]);
+        assert_eq!(end, expected);
+    }
+}
