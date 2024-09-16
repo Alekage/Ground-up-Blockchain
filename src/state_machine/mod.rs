@@ -2,6 +2,7 @@ mod swithces;
 mod laundry;
 mod atm;
 mod accounted_currency;
+mod utxo_currency;
 pub trait StateMachine {
     type State;
     type Transition;
