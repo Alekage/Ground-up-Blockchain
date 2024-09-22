@@ -79,7 +79,7 @@ impl StateMachine for DigitalCashSystem {
             CashTransaction::Mint { minter, amount } => {
                 let mut new_state = starting_state.clone();
                 let bill: Bill = Bill { owner: *minter, amount: *amount, serial: 0 };
-                new_state.add_bill(bill);
+                new_state.add_bill(bill);  
                 new_state
             }
             CashTransaction::Transfer { spends, receives } => {
