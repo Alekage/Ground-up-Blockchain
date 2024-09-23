@@ -83,28 +83,29 @@ impl StateMachine for DigitalCashSystem {
                 new_state
             }
             CashTransaction::Transfer { spends, receives } => {
+                // clone state into memory from starting_state
                 let mut new_state = starting_state.clone();
-                // let senders: Vec<User> = spends.into_iter().map(|x| x.owner).collect();
-                // let receivers: Vec<User> = receives.into_iter().map(|x| x.owner).collect();
-
-                let mut new_bills: Vec<Bill> = Vec::new();
-
-                if spends.is_empty() || receives.is_empty() {
-                    return new_state
-                }
-
                 let mut spends_amount = 0;
                 let mut receives_amount = 0;
+                let mut new_bills: Vec<Bill> = Vec::new();
+
+                if spends.is_empty() {
+                    return new_state
+                }
+                
+                let spenders_len = spends.len();
+                let last_serial = &spends[spenders_len - 1].serial;
 
                 for spend in spends {
                     if new_state.bills.contains(spend) {
                         spends_amount += spend.amount;
-                        new_state.bills.remove(spend);
+                        if spend.serial != last_serial + 1 && !receives.is_empty() {
+                            return new_state
+                        }
                     }
                 }
 
                 for receive in receives {
-
                     receives_amount += receive.amount;
 
                     let bill = Bill {
@@ -116,9 +117,16 @@ impl StateMachine for DigitalCashSystem {
                     new_bills.push(bill);
                 }
                 
-                if spends_amount > receives_amount {
+                if spends_amount > receives_amount && !receives.is_empty() {
                     return new_state
-                }
+                };
+
+                for spend in spends {
+                    if !new_state.bills.contains(spend) {
+                        
+                    }
+                    new_state.bills.remove(spend);
+                };
 
                 for bill in new_bills {
                     new_state.add_bill(bill);
