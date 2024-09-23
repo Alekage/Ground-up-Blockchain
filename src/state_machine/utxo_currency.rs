@@ -102,6 +102,8 @@ impl StateMachine for DigitalCashSystem {
                         if spend.serial != last_serial + 1 && !receives.is_empty() {
                             return new_state
                         }
+                    } else {
+                        return new_state
                     }
                 }
 
