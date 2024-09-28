@@ -1,7 +1,6 @@
-#![allow(dead_code, unused_imports)]
+#![allow(dead_code)]
 
 use crate::hash;
-
 
 type Hash = u64;
 
@@ -14,22 +13,29 @@ pub struct Header {
     consensus_digest: (),
 }
 
-
 impl Header {
     fn genesis() -> Self {
-        todo!()
+        Header { parent: 0, height: 0, extrinsics_root: (), state_root: (), consensus_digest: () }
     }
 
     fn child(&self) -> Self {
-        todo!()
+        Header { parent: hash(&self), height: self.height + 1 , extrinsics_root:() , state_root: (), consensus_digest: () }
     }
 
-    fn verify_sub_chain(&self, _chain: &[Header]) -> bool {
-        todo!()
+    fn verify_sub_chain(&self, chain: &[Header]) -> bool {
+        let mut last_header = self; 
+
+        for block_header in chain {
+            if block_header.parent != hash(last_header) || block_header.height != last_header.height + 1 {
+                return false
+            }
+
+            last_header = block_header;
+        }
+
+        true        
     }
 }
-
-
 
 fn build_valid_chain_length_5() -> Vec<Header> {
     todo!()
