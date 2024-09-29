@@ -14,28 +14,33 @@ pub struct Header {
 }
 
 impl Header {
-
     fn genesis() -> Self {
         Header { parent: 0, height: 0, extrinsic: 0, state: 0, consensus_digest: () }
     }
 
 
     fn child(&self, extrinsic: u64) -> Self {
-        todo!()
+        Header { parent: hash(&self), height: self.height + 1 , extrinsic , state: self.extrinsic + extrinsic, consensus_digest: () }
     }
-
 
     fn verify_sub_chain(&self, chain: &[Header]) -> bool {
-        todo!()
+        let mut last_header = self; 
+
+        for block_header in chain {
+            if block_header.parent != hash(last_header) || block_header.height != last_header.height + 1 || block_header.state != last_header.state + self.extrinsic {
+                return false
+            }
+
+            last_header = block_header;
+        }
+
+        true    
     }
+
 }
 
 
 fn build_valid_chain(n: u64) -> Vec<Header> {
-    todo!()
-}
-
-fn build_an_invalid_chain() -> Vec<Header> {
     todo!()
 }
 
