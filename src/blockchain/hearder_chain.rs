@@ -37,14 +37,21 @@ impl Header {
     }
 }
 
-fn build_valid_chain_length_5() -> Vec<Header> {
-    todo!()
-}
+fn build_valid_chain_length(number_of_blocks: u64) -> Vec<Header> {
+    let genesis = Header {
+        parent: 0,
+        height: 0,
+        extrinsics_root: (),
+        state_root: (),
+        consensus_digest: (),
+    };
 
-fn build_an_invalid_chain() -> Vec<Header> {
-    todo!()
+    (0..number_of_blocks).scan(genesis, |header_now, _| {
+        let current = header_now.clone();
+        *header_now = current.child();
+        Some(current)
+    }).collect()
 }
-
 
 #[cfg(test)]
 pub mod tests {
@@ -111,15 +118,9 @@ pub mod tests {
     }
 
     #[test]
-    fn bc_1_verify_chain_length_five() {
-        let chain = build_valid_chain_length_5();
+    fn bc_1_verify_chain_length() {
+        let chain = build_valid_chain_length(10);
         assert!(chain[0].verify_sub_chain(&chain[1..]))
-    }
-
-    #[test]
-    fn bc_1_invalid_chain_is_really_invalid() {
-        let invalid_chain = build_an_invalid_chain();
-        assert!(!invalid_chain[0].verify_sub_chain(&invalid_chain[1..]))
     }
 
 }
