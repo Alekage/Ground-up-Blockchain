@@ -20,14 +20,15 @@ impl Header {
 
 
     fn child(&self, extrinsic: u64) -> Self {
-        Header { parent: hash(&self), height: self.height + 1 , extrinsic , state: self.extrinsic + extrinsic, consensus_digest: () }
+        Header { parent: hash(&self), height: self.height + 1 , extrinsic , state: self.state + extrinsic, consensus_digest: () }
     }
 
     fn verify_sub_chain(&self, chain: &[Header]) -> bool {
         let mut last_header = self; 
 
         for block_header in chain {
-            if block_header.parent != hash(last_header) || block_header.height != last_header.height + 1 || block_header.state != last_header.state + self.extrinsic {
+            if block_header.parent != hash(last_header) || block_header.height != last_header.height + 1 
+            || block_header.state != last_header.state + block_header.extrinsic {
                 return false
             }
 
@@ -40,8 +41,24 @@ impl Header {
 }
 
 
-fn build_valid_chain(n: u64) -> Vec<Header> {
-    todo!()
+fn build_valid_chain(n: (u64, Vec<u64>)) -> Vec<Header> {
+    let genesis = Header {
+        parent: 0,
+        height: 0,
+        extrinsic: 0,
+        state: 0,
+        consensus_digest: (),
+    };
+
+    let (_, extrinsics) = n; 
+
+    extrinsics.into_iter()
+        .scan(genesis, |header_now, extrinsic| {
+            let current = header_now.clone();
+            *header_now = current.child(extrinsic); 
+            Some(current)
+        })
+        .collect()
 }
 
 
@@ -93,4 +110,92 @@ pub mod tests {
         let b1 = g.child(0);
         assert!(b1.parent == hash(&g));
     }
+
+    #[test]
+    fn bc_2_child_block_extrinsic() {
+        let g = Header::genesis();
+        let b1 = g.child(7);
+        assert_eq!(b1.extrinsic, 7);
+    }
+
+    #[test]
+    fn bc_2_child_block_state() {
+        let g = Header::genesis();
+        let b1 = g.child(7);
+        assert_eq!(b1.state, 7);
+    }
+
+    #[test]
+    fn bc_2_verify_genesis_only() {
+        let g = Header::genesis();
+
+        assert!(g.verify_sub_chain(&[]));
+    }
+
+    #[test]
+    fn bc_2_verify_three_blocks() {
+        let g = Header::genesis();
+        let b1 = g.child(5);
+        let b2 = b1.child(6);
+
+        assert_eq!(b2.state, 11);
+        assert!(g.verify_sub_chain(&[b1, b2]));
+    }
+
+    #[test]
+    fn bc_2_cant_verify_invalid_parent() {
+        let g = Header::genesis();
+        let mut b1 = g.child(5);
+        b1.parent = 10;
+
+        assert!(!g.verify_sub_chain(&[b1]));
+    }
+
+    #[test]
+    fn bc_2_cant_verify_invalid_number() {
+        let g = Header::genesis();
+        let mut b1 = g.child(5);
+        b1.height = 10;
+
+        assert!(!g.verify_sub_chain(&[b1]));
+    }
+
+    #[test]
+    fn bc_2_cant_verify_invalid_state() {
+        let g = Header::genesis();
+        let mut b1 = g.child(5);
+        b1.state = 10;
+
+        assert!(!g.verify_sub_chain(&[b1]));
+    }
+
+    #[test]
+    fn bc_2_verify_forked_chain() {
+        let g = Header::genesis();
+        let (c1, c2) = build_forked_chain();
+
+        // Both chains have the same valid genesis block
+        assert_eq!(g, c1[0]);
+        assert_eq!(g, c2[0]);
+
+        // Both chains are individually valid
+        assert!(g.verify_sub_chain(&c1[1..]));
+        assert!(g.verify_sub_chain(&c2[1..]));
+
+        // The two chains are not identical
+        // Question for students: I've only compared the last blocks here.
+        // Is that enough? Is it possible that the two chains have the same final block,
+        // but differ somewhere else?
+        assert_ne!(c1.last(), c2.last());
+    }
+
+    #[test]
+    fn bc_2_verify_valid_chain() {
+        let genesis = Header::genesis();
+        let blockchain = (5, vec![0, 2, 7, 9, 6]);
+        let built_blockchain = build_valid_chain(blockchain);
+
+        assert!(genesis.verify_sub_chain(&built_blockchain[1..]))
+    }
+
 }
