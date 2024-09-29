@@ -16,7 +16,7 @@ pub struct Header {
 impl Header {
 
     fn genesis() -> Self {
-        todo!()
+        Header { parent: 0, height: 0, extrinsic: 0, state: 0, consensus_digest: () }
     }
 
 
