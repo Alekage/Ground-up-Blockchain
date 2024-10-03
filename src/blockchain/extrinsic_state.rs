@@ -63,7 +63,21 @@ fn build_valid_chain(n: (u64, Vec<u64>)) -> Vec<Header> {
 
 
 fn build_forked_chain() -> (Vec<Header>, Vec<Header>) {
-    todo!()
+    let genesis = Header {
+        parent: 0,
+        height: 0,
+        extrinsic: 0,
+        state: 0,
+        consensus_digest: (),
+    };
+
+    let block_1 = genesis.child(1);
+    let block_2 = block_1.child(3);
+
+    let block_1_prim = genesis.child(2);
+    let block_2_prim = block_1_prim.child(3);
+
+    (vec![genesis.clone(), block_1, block_2], vec![genesis, block_1_prim, block_2_prim])
 }
 
 
@@ -174,18 +188,12 @@ pub mod tests {
         let g = Header::genesis();
         let (c1, c2) = build_forked_chain();
 
-        // Both chains have the same valid genesis block
         assert_eq!(g, c1[0]);
         assert_eq!(g, c2[0]);
 
-        // Both chains are individually valid
         assert!(g.verify_sub_chain(&c1[1..]));
         assert!(g.verify_sub_chain(&c2[1..]));
 
-        // The two chains are not identical
-        // Question for students: I've only compared the last blocks here.
-        // Is that enough? Is it possible that the two chains have the same final block,
-        // but differ somewhere else?
         assert_ne!(c1.last(), c2.last());
     }
 
