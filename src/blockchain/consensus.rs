@@ -20,10 +20,28 @@ pub struct Header {
 
 impl Header {
     fn genesis() -> Self {
-        todo!()
+        let genesis = Header {
+            parent: 0,
+            height: 0,
+            extrinsic: 0,
+            state: 0,
+            consensus_digest: 0
+           };
+    
+           genesis
     }
-    fn child(&self, _extrinsic: u64) -> Self {
-        todo!()
+    fn child(&self, extrinsic: u64) -> Self {
+        let mut header = Header {
+            parent: hash(self),
+            height: self.height + 1,
+            extrinsic,
+            state: self.state + extrinsic,
+            consensus_digest: 0
+        };
+
+        solve_pow(&mut header);
+
+        header 
     }
     fn verify_sub_chain(&self, _chain: &[Header]) -> bool {
         todo!()
@@ -34,6 +52,14 @@ impl Header {
     fn verify_sub_chain_odd(&self, _chain: &[Header]) -> bool {
         todo!()
     }
+}
+
+// PoW helper function
+fn solve_pow(header: &mut Header) -> u64 {
+    while hash(header) >= THRESHOLD {
+        header.consensus_digest += 1;
+    };
+    header.consensus_digest
 }
 
 fn build_contentious_forked_chain() -> (Vec<Header>, Vec<Header>, Vec<Header>) {
