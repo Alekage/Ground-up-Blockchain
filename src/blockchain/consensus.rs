@@ -43,8 +43,23 @@ impl Header {
 
         header 
     }
-    fn verify_sub_chain(&self, _chain: &[Header]) -> bool {
-        todo!()
+    
+    fn verify_sub_chain(&self, chain: &[Header]) -> bool {
+        let mut last_header = self;
+    
+        for block_header in chain {
+            if block_header.parent != hash(last_header)
+                || block_header.height != last_header.height + 1
+                || block_header.state != last_header.state + block_header.extrinsic
+                || hash(block_header) > THRESHOLD
+            {
+                return false;
+            }
+    
+            last_header = block_header;
+        }
+    
+        true
     }
     fn verify_sub_chain_even(&self, _chain: &[Header]) -> bool {
         todo!()
